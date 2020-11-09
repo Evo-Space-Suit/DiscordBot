@@ -1,6 +1,8 @@
 from random import choice
 import ast
 import math
+import re
+import string
 
 
 def match_return(to_eq, to_respond):
@@ -8,7 +10,12 @@ def match_return(to_eq, to_respond):
 
 
 def short_username(name):
-    return name.split('-')[0].strip()
+    return re.match(r"^([a-zA-Z ])+", name).group().strip()
+
+
+def raw_words(msg):
+    exclude = set(string.punctuation)
+    return ''.join(ch for ch in msg if ch not in exclude).split(' ')
 
 
 def safe_to_evaluate(string):
@@ -73,6 +80,7 @@ mars_quotes = [
 message_handlers = [
     # condition, handler
     match_return("!test", "Beep boop :robot:"),
+    # TODO show available commands
     match_return("!introduce-yourself",
                  "Hi ESS @here!\n"
                  "My name is B-Evo, and in the future I hope to perform the following tasks for the team:\n"
@@ -82,9 +90,10 @@ message_handlers = [
                  "Stay safe all. :robot: :family:"),
     (lambda msg: msg.startswith("!quote"),
      lambda msg, *_: format_quote(*choice(mars_quotes))),
-    (lambda msg: any(greeting in msg for greeting in greetings) and
+    (lambda msg: any(greeting in msg for greeting in greetings) and  # TODO improve search in msg
                  any(bot_name in msg for bot_name in bot_names),
      lambda msg, display_name: f"Hi {short_username(display_name)}! :{choice(intro_emoji)}:"),
     (lambda msg: msg.startswith("!calc") and safe_to_evaluate(msg[6:]),
      lambda msg, *_: silent_eval(msg[6:]))
+    # TODO add time-zone converter
 ]
