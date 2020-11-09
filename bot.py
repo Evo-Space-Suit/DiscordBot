@@ -2,22 +2,24 @@ import os
 
 import discord
 
+from static_handlers import message_handlers
+
 
 class MainClient(discord.Client):
     async def on_ready(self):
-        print("ready.")
+        print("Ready.")
 
     async def on_message(self, message: discord.Message):
-        if message.content.startswith("!test"):
-            await message.channel.send("Beep boop :robot:")
-        if message.content.startswith("!introduce-yourself"):
-            await message.channel.send(
-                    "Hi ESS @here!\n"
-                    "My name is B-Evo, and in the future I hope to perform the following tasks for the team:\n"
-                    "1) Provide a test-bed for the personal assistant that'll be integrated in the suit. :robot: :astronaut:\n"
-                    "2) Execute familiar bot-commands like provide meeting summaries and GDrive upload notifications. :robot: :page_facing_up:\n"
-                    "3) Act as a companion in these dark times. :robot: :hugging:\n"
-                    "Stay safe all. :robot: :family:\n")
+        if message.author.id == self.user.id:
+            return
+
+        for condition, handler in message_handlers:
+            if condition(message.content.lower()):
+                await message.channel.send(handler(message.content, message.author.display_name))
+                return
+
+        if message.content.startswith("!"):
+            print(f"No handler for bot command {message.content} found.")
 
 
 if __name__ == '__main__':
