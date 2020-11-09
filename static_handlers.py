@@ -1,4 +1,6 @@
 from random import choice
+import ast
+import math
 
 
 def match_return(to_eq, to_respond):
@@ -7,6 +9,35 @@ def match_return(to_eq, to_respond):
 
 def short_username(name):
     return name.split('-')[0].strip()
+
+
+def safe_to_evaluate(string):
+    if len(string) > 300:
+        return False
+    try:
+        tree = ast.parse(string)
+    except SyntaxError:
+        return False
+
+    available_names = set(dir(math))
+    allowed_node_types = [ast.Module, ast.Expr,
+                          ast.BinOp, ast.Constant, ast.keyword,  # ast.Attribute
+                          ast.Load, ast.Call,
+                          ast.Div, ast.Mult, ast.Add, ast.Sub, ast.Pow]
+
+    def inclusion_criteria(node):
+        if isinstance(node, ast.Name):
+            return node.id in available_names
+        return any(isinstance(node, node_type) for node_type in allowed_node_types)
+    return all(map(inclusion_criteria, ast.walk(tree)))
+
+
+def silent_eval(expression):
+    try:
+        return f"Result: {eval(expression, {}, vars(math))}"
+    except Exception as e:
+        print(e, repr(expression))
+        return f"Error: {e}"
 
 
 bot_names = ["bevo", "b-evo", "bot", "ess-bot", "bevoo", "bevooo", "essbot", "ess bot"]
@@ -25,5 +56,7 @@ message_handlers = [
                  "Stay safe all. :robot: :family:"),
     (lambda msg: any(greeting in msg for greeting in greetings) and
                  any(bot_name in msg for bot_name in bot_names),
-     lambda msg, display_name: f"Hi {short_username(display_name)}! :{choice(intro_emoji)}:")
+     lambda msg, display_name: f"Hi {short_username(display_name)}! :{choice(intro_emoji)}:"),
+    (lambda msg: msg.startswith("!calc") and safe_to_evaluate(msg[6:]),
+     lambda msg, *_: silent_eval(msg[6:]))
 ]
