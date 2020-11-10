@@ -5,9 +5,20 @@ import discord
 from static_handlers import message_handlers
 
 
+landing_channel = 'airlock'
+channel_ids = {
+    'airlock': 768922224626761772
+}
+
+
 class MainClient(discord.Client):
     async def on_ready(self):
         print("Ready.")
+
+    async def on_member_join(self, member: discord.Member):
+        await self.get_channel(channel_ids[landing_channel]).send(
+                f"Welcome to the Evo Space Suit Team server {member.display_name} :tada:\n"
+                "Take a look around and if you have any questions or wish to participate please reach out to any of our friendly staff.\n")
 
     async def on_message(self, message: discord.Message):
         if message.author.id == self.user.id:
@@ -23,5 +34,7 @@ class MainClient(discord.Client):
 
 
 if __name__ == '__main__':
-    client = MainClient()
+    intents = discord.Intents().all()
+    intents.presences = False
+    client = MainClient(intents=intents)
     client.run(os.environ.get("DISCORD_TOKEN"))
