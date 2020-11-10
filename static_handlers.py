@@ -18,6 +18,19 @@ def raw_words(msg):
     return ''.join(ch for ch in msg if ch not in exclude).split(' ')
 
 
+def sentence_contains(sent, content):
+    if sent == content: return True
+    if content in sent.split(' '): return True
+
+    tokens = [w.lower().strip(string.punctuation) for w in sent.split(' ')]
+    content_tokens = [w.lower().strip(string.punctuation) for w in content.split(' ')]
+    for i, start_token in enumerate(tokens):
+        if start_token == content_tokens[0] and len(tokens) - i >= len(content_tokens):
+            if all(w == w_ for w, w_ in zip(tokens[i:], content_tokens[i:])):
+                return True
+    return False
+
+
 def safe_to_evaluate(string):
     if len(string) > 300:
         return False
@@ -53,7 +66,7 @@ def format_quote(author, quote):
 
 
 bot_names = ["bevo", "b-evo", "bot", "ess-bot", "bevoo", "bevooo", "essbot", "ess bot"]
-greetings = ["hi", "hello", "hey", "helloo", "hellooo", "good morning", "good day", "good afternoon", "good evening", "greetings", "greeting", "good to see you", "its good seeing you", "how are you", "how're you", "how are you doing", "how ya doin'", "how ya doin", "how is everything", "how is everything going", "how's everything going", "how are things", "how're things", "how is it going", "how's it going", "how's it goin'", "how's it goin", "how is life been treating you", "how's life been treating you", "how have you been", "how've you been", "what is up", "what's up", "what is cracking", "what's cracking", "what is good", "what's good", "what is happening", "what's happening", "what is new", "what's new", "g’day", "howdy", "o/", ":wave:"]
+greetings = ["hi", "hello", "hey", "helloo", "hellooo", "good morning", "good day", "good afternoon", "good evening", "greetings", "greeting", "good to see you", "its good seeing you", "how are you", "how're you", "how are you doing", "how ya doin'", "how ya doin", "how is everything", "how is everything going", "how's everything going", "how are things", "how're things", "how is it going", "how's it going", "how's it goin'", "how's it goin", "how is life been treating you", "how's life been treating you", "how have you been", "how've you been", "what is up", "what's up", "what is cracking", "what's cracking", "what is good", "what's good", "what is happening", "what's happening", "what is new", "what's new", "g’day", "howdy", "o/", "👋"]
 intro_emoji = ["robot", "sunny", "astronaut", "wave", "sunglasses", "zany_face"]
 mars_quotes = [
     ('Buzz Aldrin', 'Mars is there, waiting to be reached.'),
@@ -90,8 +103,8 @@ message_handlers = [
                  "Stay safe all. :robot: :family:"),
     (lambda msg: msg.startswith("!quote"),
      lambda msg, *_: format_quote(*choice(mars_quotes))),
-    (lambda msg: any(greeting in msg for greeting in greetings) and  # TODO improve search in msg
-                 any(bot_name in msg for bot_name in bot_names),
+    (lambda msg: any(sentence_contains(msg, greeting) for greeting in greetings) and
+                 any(sentence_contains(msg, bot_name) for bot_name in bot_names),
      lambda msg, display_name: f"Hi {short_username(display_name)}! :{choice(intro_emoji)}:"),
     (lambda msg: msg.startswith("!calc") and safe_to_evaluate(msg[6:]),
      lambda msg, *_: silent_eval(msg[6:]))
