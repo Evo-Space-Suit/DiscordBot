@@ -34,7 +34,8 @@ class MainClient(discord.Client):
 
 
 if __name__ == '__main__':
-    intents = discord.Intents().all()
+    # FIXME figure out the exact intents required
+    intents = discord.Intents.all()
     intents.presences = False
     client = MainClient(intents=intents)
     client.run(os.environ.get("DISCORD_TOKEN"))
