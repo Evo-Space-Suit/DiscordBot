@@ -5,6 +5,9 @@ import discord
 from static_handlers import message_handlers
 
 
+GREETING_ON_JOIN = False
+
+
 landing_channel = 'airlock'
 channel_ids = {
     'airlock': 768922224626761772
@@ -16,6 +19,7 @@ class MainClient(discord.Client):
         print("Ready.")
 
     async def on_member_join(self, member: discord.Member):
+        if not GREETING_ON_JOIN: return
         await self.get_channel(channel_ids[landing_channel]).send(
                 f"Welcome to the Evo Space Suit Team server {member.display_name} :tada:\n"
                 "Take a look around and if you have any questions or wish to participate please reach out to any of our friendly staff.\n")
