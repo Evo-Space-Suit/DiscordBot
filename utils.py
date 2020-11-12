@@ -140,26 +140,36 @@ def time_limit(max_time, message="Timed out."):
         timer.cancel()
 
 
-def silent_eval(expression, max_execution_time=.05):
+def silent_eval(expression, max_execution_time=.05, max_result_length=160):
     """
     Evaluates an expression with only `math` in scope and on a time budget.
     Silences *all* exceptions and returns them as a string.
 
     :param expression: string expression to evaluate
     :param max_execution_time: time budget in seconds
+    :param max_result_length: maximum length of result in characters
     :return: evaluated result as a string
 
+    >>> silent_eval("100*100")
+    'Result: 10000'
     >>> silent_eval("comb(8, 4)", 0.01)
     'Result: 70'
     >>> silent_eval("comb(10**8, 10**4)", 0.01)
     'Timeout: took longer than 0.01 seconds to evaluate'
+    >>> silent_eval("100**100", 0.01, 200)
+    'Length: evaluated expression length (201) is greater than allowed here'
     >>> silent_eval("comb()")
     'Error: comb expected 2 arguments, got 0'
     """
     try:
         with time_limit(max_execution_time):
-            return f"Result: {eval(expression, {}, vars(math))}"
+            result = eval(expression, {}, vars(math))
     except TimeoutException:
         return f"Timeout: took longer than {max_execution_time} seconds to evaluate"
     except Exception as e:
         return f"Error: {e}"
+
+    result_length = len(str(result))
+    if result_length > max_result_length:
+        return f"Length: evaluated expression length ({result_length}) is greater than allowed here"
+    return f"Result: {result}"
