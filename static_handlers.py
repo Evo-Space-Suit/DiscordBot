@@ -1,63 +1,9 @@
 from random import choice
-import ast
-import math
-import re
-import string
+import utils
 
 
 def match_return(to_eq, to_respond):
     return lambda msg: msg == to_eq, lambda msg, *_: to_respond
-
-
-def short_username(name):
-    return re.match(r"^([a-zA-Z ])+", name).group().strip()
-
-
-def raw_words(msg):
-    exclude = set(string.punctuation)
-    return ''.join(ch for ch in msg if ch not in exclude).split(' ')
-
-
-def sentence_contains(sent, content):
-    if sent == content: return True
-    if content in sent.split(' '): return True
-
-    tokens = [w.lower().strip(string.punctuation) for w in sent.split(' ')]
-    content_tokens = [w.lower().strip(string.punctuation) for w in content.split(' ')]
-    for i, start_token in enumerate(tokens):
-        if start_token == content_tokens[0] and len(tokens) - i >= len(content_tokens):
-            if all(w == w_ for w, w_ in zip(tokens[i:], content_tokens[i:])):
-                return True
-    return False
-
-
-def safe_to_evaluate(string):
-    if len(string) > 300:
-        return False
-    try:
-        tree = ast.parse(string)
-    except SyntaxError:
-        return False
-
-    available_names = set(dir(math))
-    allowed_node_types = [ast.Module, ast.Expr,
-                          ast.BinOp, ast.Constant, ast.keyword,  # ast.Attribute
-                          ast.Load, ast.Call,
-                          ast.Div, ast.Mult, ast.Add, ast.Sub, ast.Pow]
-
-    def inclusion_criteria(node):
-        if isinstance(node, ast.Name):
-            return node.id in available_names
-        return any(isinstance(node, node_type) for node_type in allowed_node_types)
-    return all(map(inclusion_criteria, ast.walk(tree)))
-
-
-def silent_eval(expression):
-    try:
-        return f"Result: {eval(expression, {}, vars(math))}"
-    except Exception as e:
-        print(e, repr(expression))
-        return f"Error: {e}"
 
 
 def format_quote(author, quote):
@@ -103,10 +49,10 @@ message_handlers = [
                  "Stay safe all. :robot: :family:"),
     (lambda msg: msg.startswith("!quote"),
      lambda msg, *_: format_quote(*choice(mars_quotes))),
-    (lambda msg: any(sentence_contains(msg, greeting) for greeting in greetings) and
-                 any(sentence_contains(msg, bot_name) for bot_name in bot_names),
-     lambda msg, display_name: f"Hi {short_username(display_name)}! :{choice(intro_emoji)}:"),
-    (lambda msg: msg.startswith("!calc") and safe_to_evaluate(msg[6:]),
-     lambda msg, *_: silent_eval(msg[6:]))
+    (lambda msg: any(utils.sentence_contains(msg, greeting) for greeting in greetings) and
+                 any(utils.sentence_contains(msg, bot_name) for bot_name in bot_names),
+     lambda msg, display_name: f"Hi {utils.short_username(display_name)}! :{choice(intro_emoji)}:"),
+    (lambda msg: msg.startswith("!calc") and utils.safe_to_evaluate(msg[6:]),
+     lambda msg, *_: utils.silent_eval(msg[6:]))
     # TODO add time-zone converter
 ]
