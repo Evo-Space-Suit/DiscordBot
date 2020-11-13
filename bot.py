@@ -10,11 +10,27 @@ GREETING_ON_JOIN = False
 
 landing_channel = 'airlock'
 channel_ids = {
-    'airlock': 768922224626761772
+    'airlock': 768922224626761772,
+    'General': 768922224626761773,  # voice chat
 }
 
 
 class MainClient(discord.Client):
+    async def play_in_channel(self, channel, audio, send_invitation=True):
+        voice: discord.VoiceChannel = self.get_channel(channel_ids[channel])
+
+        try:
+            voice_client: discord.VoiceClient = next(filter(lambda vc: vc.channel.id == channel_ids[channel], self.voice_clients))
+        except StopIteration:
+            voice_client: discord.VoiceClient = await voice.connect()
+
+        if voice_client.is_playing():
+            voice_client.stop()
+        voice_client.play(audio)
+
+        if send_invitation:
+            return await voice.create_invite(max_age=120, temporary=True)
+
     async def on_ready(self):
         print("Ready.")
 
@@ -28,9 +44,12 @@ class MainClient(discord.Client):
         if message.author.id == self.user.id:
             return
 
-        for condition, handler in message_handlers:
+        for condition, handler, *side_effects in message_handlers:
             if condition(message.content.lower()):
-                await message.channel.send(handler(message.content, message.author.display_name))
+                if handler:
+                    await message.channel.send(handler(message.content, message.author.display_name))
+                for side_effect in side_effects:
+                    await side_effect(self, message)
                 return
 
         if message.content.startswith("!"):

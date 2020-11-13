@@ -173,3 +173,37 @@ def silent_eval(expression, max_execution_time=.05, max_result_length=160):
     if result_length > max_result_length:
         return f"Length: evaluated expression length ({result_length}) is greater than allowed here"
     return f"Result: {result}"
+
+
+def search(collection, matches=lambda x, y: x == y, **criteria):
+    """
+    Search for items matching some fields in a given collection.
+    The items can have regular and integer fields, matching via some metric.
+
+    :param collection: iterable of items
+    :param matches: metric to check equality
+    :param criteria: keywords of the form field_name=value, for integers field_name has to be prefixed by '_'
+    :return: iterator for matching items
+
+    >>> from math import isclose
+    >>> list(search([1+1j, 0+1j, 1+0j, 0+0j], isclose, imag=0.0))
+    [(1+0j), 0j]
+    >>> next(search([(1, 1), (0, 1), (1, 0), (0, 0, 0)], _1=0))
+    (1, 0)
+    >>> set(search(['abc', 'bab', 'aba', 'aca', 'aca'], _0='a', _2='a')) == {'aba', 'aca'}
+    True
+    >>> list(search(['a', 'b', 'c'], _0='d'))
+    []
+    """
+    def is_index_key(key):
+        return key[0] == '_' and key[1:].isdigit()
+
+    def get_index_key(seq, key):
+        index = int(key[1:])
+        return seq[index] if -len(seq) <= index < len(seq) else None
+
+    for item in list(collection):
+        if all(matches((get_index_key(item, key) if is_index_key(key) else
+                       getattr(item, key, None)), value)
+               for key, value in criteria.items()):
+            yield item
