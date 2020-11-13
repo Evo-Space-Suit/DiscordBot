@@ -125,7 +125,6 @@ async def stop_handler(client, message):
 message_handlers = [
     # condition, handler, *side_effects
     match_return("!test", "Beep boop :robot:"),
-    # TODO show available commands
     match_return("!introduce-yourself",
                  "Hi ESS @here!\n"
                  "My name is B-Evo, and in the future I hope to perform the following tasks for the team:\n"

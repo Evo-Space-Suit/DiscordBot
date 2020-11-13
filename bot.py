@@ -14,6 +14,10 @@ channel_ids = {
     'General': 768922224626761773,  # voice chat
 }
 
+user_ids = {
+    'Adam': 266680529020125185,
+}
+
 
 class MainClient(discord.Client):
     async def play_in_channel(self, channel, audio, send_invitation=True):
@@ -52,8 +56,13 @@ class MainClient(discord.Client):
                     await side_effect(self, message)
                 return
 
-        if message.content.startswith("!"):
-            print(f"No handler for bot command {message.content} found.")
+        # TODO show available commands
+        if message.content.startswith("!help"):
+            await message.channel.send("I'm still being setup and my abilities evolve rapidly :robot:\n"
+                                       f"Please refer to <@{user_ids['Adam']}> if you have a question about me.")
+        elif message.content.startswith("!"):
+            command, *args = message.content[1:].split()
+            await message.channel.send(f"Sorry! I don't know how to do '{command}' at this point :confused:")
 
 
 if __name__ == '__main__':
