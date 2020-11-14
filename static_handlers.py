@@ -151,7 +151,7 @@ message_handlers = [
     (lambda msg: any(utils.sentence_contains(msg, greeting) for greeting in greetings) and
                  any(utils.sentence_contains(msg, bot_name) for bot_name in bot_names),
      lambda msg, display_name: f"Hi {utils.short_username(display_name)}! :{choice(intro_emoji)}:"),
-    (lambda msg: msg.startswith("!calc") and utils.safe_to_evaluate(msg[6:]),
-     lambda msg, *_: utils.silent_eval(msg[6:]))
+    (lambda msg: msg.startswith("!calc") and utils.safe_to_evaluate(msg[6:].strip('`')),
+     lambda msg, *_: utils.silent_eval(msg[6:].strip('`')))
     # TODO add time-zone converter
 ]
